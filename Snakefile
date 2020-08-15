@@ -35,6 +35,13 @@ rule extract_sig_names_new_sbt_catalog:
   run:
     extract(input[0], output[0])
 
+rule extract_sig_names_subset:
+  output: "outputs/signames_subset.txt"
+  input: "outputs/duplicated_subset.sbt.zip"
+  run:
+    extract(input[0], output[0])
+
+
 rule build_sbt_from_set:
   output: "outputs/newtree.sbt.zip"
   input: "outputs/signames.txt"
@@ -102,4 +109,33 @@ rule duplicated_sigs:
   shell: """
     sort {input} | uniq -c | sort -nr | \
     grep -v '  1 ' | tr -s ' ' | cut -d ' ' -f3 > {output}
+  """
+
+rule new_subset_catalog:
+  output: "outputs/duplicated_subset.txt"
+  input:
+    dup_accs = "outputs/duplicated.txt",
+    sig_links = "/home/irber/sourmash_databases/outputs/catalog/bacteria/genbank.txt"
+  run:
+    accessions = set()
+    with open(input.dup_accs, 'r') as f:
+      for line in f:
+        accessions.add(line.strip())
+
+    with open(output[0], 'w') as out:
+      with open(input.sig_links, 'r') as f:
+        for line in f:
+            sig_acc = line.strip().split("/")[-1][:-4]
+            if sig_acc in accessions:
+              out.write(line)
+
+rule duplicated_sbt:
+  output: "outputs/duplicated_subset.sbt.zip"
+  input: "outputs/duplicated_subset.txt"
+  params:
+    abs_output = lambda w, input, output: os.path.abspath(output[0]),
+    abs_input = lambda w, input, output: os.path.abspath(input[0]),
+  shell: """
+    cd ~/sourmash_databases
+    sourmash index -k 51 -x 64 --from-file <(tail +2 {params.abs_input}) {params.abs_output} $(head -1 {params.abs_input})
   """
