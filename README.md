@@ -1,6 +1,6 @@
-# Tracking down bug in #849
+# Tracking down bug in #1171
 
-More info: https://github.com/dib-lab/sourmash/issues/849
+More info: https://github.com/dib-lab/sourmash/issues/1171
 
 ## Computational Environment
 

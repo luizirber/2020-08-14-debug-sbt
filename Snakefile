@@ -95,3 +95,11 @@ rule generate_catalog:
             name_parts += [" ", row['infraspecific_name']]
           name_parts += [', ', row['asm_name']]
           out.write("".join(name_parts) + "\n")
+
+rule duplicated_sigs:
+  output: "outputs/duplicated.txt"
+  input: "outputs/signames.txt"
+  shell: """
+    sort {input} | uniq -c | sort -nr | \
+    grep -v '  1 ' | tr -s ' ' | cut -d ' ' -f3 > {output}
+  """
